@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShortLivedChatServer", "ShortLivedChatServer\ShortLivedChatServer.csproj", "{910EBCA2-DB8F-463B-AA34-27AD600484A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShortLivedChatConsoleClient", "ShortLivedChatConsoleClient\ShortLivedChatConsoleClient.csproj", "{BE728A57-7584-4014-84D8-6748371E2080}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{910EBCA2-DB8F-463B-AA34-27AD600484A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{910EBCA2-DB8F-463B-AA34-27AD600484A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{910EBCA2-DB8F-463B-AA34-27AD600484A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{910EBCA2-DB8F-463B-AA34-27AD600484A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE728A57-7584-4014-84D8-6748371E2080}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE728A57-7584-4014-84D8-6748371E2080}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE728A57-7584-4014-84D8-6748371E2080}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE728A57-7584-4014-84D8-6748371E2080}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B9E2C8CC-5D83-40A0-908B-976081B502B8}
+	EndGlobalSection
+EndGlobal
