@@ -17,22 +17,20 @@ namespace ShortLivedChatServer.Hubs
     public class ChatHub : Hub, ISender
     {
         private readonly IApplicationLifetime _applicationLifetime;
-        private readonly IHubContext<ChatHub> _hubContext;
 
-        public ChatHub(IHubContext<ChatHub> hubContext, IApplicationLifetime applicationLifetime)
+        public ChatHub(IApplicationLifetime applicationLifetime)
         {
-            _hubContext = hubContext;
             _applicationLifetime = applicationLifetime;
         }
 
         public void SendMessageFromServer(string message)
         {
-            _hubContext.Clients.All.SendAsync("ServerMessage", $"{message}");
+           Clients.All.SendAsync("ServerMessage", $"{message}");
         }
 
         public void CloseChatChannel()
         {
-            _hubContext.Clients.All.SendAsync("Close");
+            Clients.All.SendAsync("Close");
             //restart server
             _applicationLifetime.StopApplication();
             
@@ -41,26 +39,26 @@ namespace ShortLivedChatServer.Hubs
         /// <inheritdoc />
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            _hubContext.Clients.All.SendAsync("Send", $"{GetUserName()} left the chat");
+            Clients.All.SendAsync("Send", $"{GetUserName()} left the chat");
 
             return base.OnDisconnectedAsync(exception);
         }
 
         public Task Send(string message)
         {
-            return _hubContext.Clients.All.SendAsync("Send", $"{message}");
+            return Clients.All.SendAsync("Send", $"{message}");
         }
 
         public Task SendFromClient(string message)
         {
-            return _hubContext.Clients.All.SendAsync("Send", $"{GetUserName()}: {message}");
+            return Clients.All.SendAsync("Send", $"{GetUserName()}: {message}");
         }
 
 
         /// <inheritdoc />
         public override Task OnConnectedAsync()
         {
-            _hubContext.Clients.All.SendAsync("Send", $"{GetUserName()} joined the chat");
+            Clients.All.SendAsync("Send", $"{GetUserName()} joined the chat");
             return base.OnConnectedAsync();
         }
 
