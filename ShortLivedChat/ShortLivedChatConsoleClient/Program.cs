@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -7,7 +8,7 @@ namespace ShortLivedChatConsoleClient
     internal static class Program
     {
         //hardcoded port and baseurl
-        private const string ServerPort = "44359";
+        private const string ServerPort = "5001";
         private static readonly string BaseUrl = $"https://localhost:{ServerPort}/";
 
         private static HubConnection _chatConnection;

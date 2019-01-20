@@ -17,21 +17,30 @@ namespace ShortLivedChatServer
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+        
+
             services.AddSignalR().AddMessagePackProtocol();
-            services.AddIdentityServer()
-                .AddDeveloperSigningCredential()
-                .AddInMemoryApiResources(ISConfig.GetApiResources())
-                .AddInMemoryClients(ISConfig.GetClients())
-                .AddTestUsers(ISConfig.GetUsers())
-               .AddSigningCredential(Cert.Get("thecert.pfx", "somepassword"));
-            
+
             services.AddMvcCore()
                 .AddAuthorization();
+
+            services.AddIdentityServer()
+                //.AddDeveloperSigningCredential()
+                .AddInMemoryApiResources(ISConfig.GetApiResources())
+                .AddInMemoryClients(ISConfig.GetClients())
+                .AddInMemoryPersistedGrants()
+                .AddTestUsers(ISConfig.GetUsers())
+                .AddSigningCredential(Cert.Get("theCert.pfx", "somePassword"))
+                .AddDeveloperSigningCredential();
+
+
+
+
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
                 {
-                    options.Authority = "https://localhost:44359/";
+                    options.Authority = "https://localhost:5001/";
                     options.RequireHttpsMetadata = true;
                     options.ApiName = "shortlivedchat";
                 });
@@ -43,6 +52,8 @@ namespace ShortLivedChatServer
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
+
+
             app.UseIdentityServer();
             app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat"); });
             var iSender = serviceProvider.GetService<ISender>();

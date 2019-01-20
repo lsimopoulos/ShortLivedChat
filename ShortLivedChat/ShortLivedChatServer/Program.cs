@@ -14,7 +14,7 @@ namespace ShortLivedChatServer
         public static IWebHostBuilder CreateWebHostBuilder(string[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                .UseIISIntegration()
+                .UseKestrel()
                 .UseStartup<Startup>();
         }
     }
