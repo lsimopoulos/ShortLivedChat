@@ -9,6 +9,20 @@ namespace ShortLivedChatServer.IdentityServerConfig
     /// </summary>
     public static class ISConfig
     {
+        private static List<TestUser> _registeredUsers = new List<TestUser>{
+            new TestUser
+            {
+                SubjectId = "1",
+                Username = "bob",
+                Password = "password"
+            },
+            new TestUser
+            {
+                SubjectId = "2",
+                Username = "mrC",
+                Password = "pass"
+            }};
+
         /// <summary>
         ///     Get api resources.
         /// </summary>
@@ -19,7 +33,6 @@ namespace ShortLivedChatServer.IdentityServerConfig
                 new ApiResource("shortlivedchat", "Short lived Chat")
             };
         }
-
 
         /// <summary>
         ///     Get clients.
@@ -58,21 +71,13 @@ namespace ShortLivedChatServer.IdentityServerConfig
         /// </summary>
         public static List<TestUser> GetUsers()
         {
-            return new List<TestUser>
-            {
-                new TestUser
-                {
-                    SubjectId = "1",
-                    Username = "bob",
-                    Password = "password"
-                },
-                new TestUser
-                {
-                    SubjectId = "2",
-                    Username = "mrC",
-                    Password = "pass"
-                }
-            };
+            return _registeredUsers;
+        }
+
+        public static void AddUser(TestUser user)
+        {
+            user.SubjectId = (_registeredUsers.Count + 1).ToString();
+            _registeredUsers.Add(user);
         }
     }
 }

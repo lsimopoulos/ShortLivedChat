@@ -21,7 +21,7 @@ namespace ShortLivedChatConsoleClient
         {
             //Get token
             //TODO : prompt the user to enter username and password in console 
-            var token = TokenHelper.GetAccessToken(BaseUrl,"bob","password");
+            var token = TokenHelper.GetAccessToken(BaseUrl,"birbilis","pass");
             if (token.Result == null)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -43,7 +43,7 @@ namespace ShortLivedChatConsoleClient
             });
 
 
-            _chatConnection.On<string>("ServerMessage", message =>
+            _chatConnection.On<string>("SendFromServer", message =>
             {
                 Console.ForegroundColor = ConsoleColor.DarkBlue;
                 Console.WriteLine($"{message}");
@@ -55,6 +55,7 @@ namespace ShortLivedChatConsoleClient
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"{message}");
             });
+
 
 
             while (true) await _chatConnection.SendAsync("SendFromClient", Console.ReadLine());

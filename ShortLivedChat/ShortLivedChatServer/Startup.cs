@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
+using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using ShortLivedChatServer.Classes;
 using ShortLivedChatServer.Hubs;
 using ShortLivedChatServer.IdentityServerConfig;
-using ShortLivedChatServer.Interfaces;
 
 namespace ShortLivedChatServer
 {
@@ -17,36 +17,41 @@ namespace ShortLivedChatServer
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-        
+
 
             services.AddSignalR().AddMessagePackProtocol();
 
             services.AddMvcCore()
+                .AddJsonFormatters()
                 .AddAuthorization();
 
-            services.AddIdentityServer()
-                //.AddDeveloperSigningCredential()
+            //https://github.com/IdentityServer/IdentityServer4/issues/2846
+            //adding a dummy cookie handler
+
+            services.AddIdentityServer(options => options.Authentication.CookieAuthenticationScheme = "dummy")
+                .AddDeveloperSigningCredential()
                 .AddInMemoryApiResources(ISConfig.GetApiResources())
                 .AddInMemoryClients(ISConfig.GetClients())
                 .AddInMemoryPersistedGrants()
                 .AddTestUsers(ISConfig.GetUsers())
-                .AddSigningCredential(Cert.Get("theCert.pfx", "somePassword"))
+                //.AddSigningCredential(Cert.Get("theCert.pfx", "somePassword"))
                 .AddDeveloperSigningCredential();
 
 
 
 
 
-            services.AddAuthentication("Bearer")
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(options =>
                 {
                     options.Authority = "https://localhost:5001/";
                     options.RequireHttpsMetadata = true;
                     options.ApiName = "shortlivedchat";
-                });
+                }).AddCookie("dummy")
+                ;
 
-
-            services.AddTransient<ISender, ChatHub>();
+            //services.AddSingleton<ChatManager>();
+            services.AddSingleton<TimerHelper>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,12 +61,28 @@ namespace ShortLivedChatServer
 
             app.UseIdentityServer();
             app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat"); });
-            var iSender = serviceProvider.GetService<ISender>();
-            Task.Factory.StartNew(() =>
+
+
+            app.Map("/api", builder =>
             {
-                var customTimerObject = new Tuple<ISender, DateTime>(iSender, DateTime.UtcNow);
-                _timer = new Timer(TimerCallback, customTimerObject, 0, 1000);
+                builder.UseMvc(routes =>
+                {
+                    routes.MapRoute(
+                        "controller",
+                        "api/{controller}");
+                    routes.MapRoute(
+                        "controllerAndAction",
+                        "api/{controller}/{action}");
+                    routes.MapRoute(
+                        "controllerAndActionAndId",
+                        "api/{controller}/{action}/{id?}");
+                });
             });
+
+            //Task.Factory.StartNew(() =>
+            //{
+            //    _timer = new Timer(TimerCallback, DateTime.UtcNow, 0, 1000);
+            //});
         }
 
         //TODO: Refactor
@@ -69,17 +90,17 @@ namespace ShortLivedChatServer
         /// callback fo the timer.
         /// </summary>
         /// <param name="state"></param>
-        private static void TimerCallback(object state)
-        {
-            var complexObject = state as Tuple<ISender, DateTime>;
-            if (DateTime.UtcNow - complexObject.Item2 > TimeSpan.FromSeconds(150) &&
-                DateTime.UtcNow - complexObject.Item2 < TimeSpan.FromSeconds(180))
-                complexObject.Item1.SendMessageFromServer(
-                    $"This chat channel is about to close in {180 - (DateTime.UtcNow - complexObject.Item2).TotalSeconds:##}s");
+        //private static void TimerCallback(object state)
+        //{
 
-            if (DateTime.UtcNow - complexObject.Item2 <= TimeSpan.FromSeconds(179)) return;
-            complexObject.Item1.CloseChatChannel();
-            _timer.Dispose();
-        }
+        //    if (DateTime.UtcNow - complexObject.Item2 > TimeSpan.FromSeconds(150) &&
+        //        DateTime.UtcNow - complexObject.Item2 < TimeSpan.FromSeconds(180))
+        //        complexObject.Item1.SendMessageFromServer(
+        //            $"This chat channel is about to close in {180 - (DateTime.UtcNow - complexObject.Item2).TotalSeconds:##}s");
+
+        //    if (DateTime.UtcNow - complexObject.Item2 <= TimeSpan.FromSeconds(179)) return;
+        //    complexObject.Item1.CloseChatChannel();
+        //    _timer.Dispose();
+        //}
     }
 }

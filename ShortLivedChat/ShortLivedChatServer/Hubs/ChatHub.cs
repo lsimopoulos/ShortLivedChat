@@ -1,45 +1,38 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
+using ShortLivedChatServer.Classes;
 using ShortLivedChatServer.IdentityServerConfig;
-using ShortLivedChatServer.Interfaces;
 
 namespace ShortLivedChatServer.Hubs
 {
+    //TODO refactor hub
     /// <summary>
     /// Chat hub.
     /// </summary>
-    [Authorize(AuthenticationSchemes = "Bearer")]
-    public class ChatHub : Hub, ISender
+    [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
+    public class ChatHub : Hub
     {
-        private readonly IApplicationLifetime _applicationLifetime;
+        private readonly TimerHelper _timerHelper;
 
-        public ChatHub(IApplicationLifetime applicationLifetime)
+        public ChatHub(TimerHelper timerHelper)
         {
-            _applicationLifetime = applicationLifetime;
+            _timerHelper = timerHelper;
         }
 
-        public void SendMessageFromServer(string message)
+        public void SendFromServer(string message)
         {
-           Clients.All.SendAsync("ServerMessage", $"{message}");
-        }
-
-        public void CloseChatChannel()
-        {
-            Clients.All.SendAsync("Close");
-            //restart server
-            _applicationLifetime.StopApplication();
-            
+            Clients.All.SendAsync(nameof(SendFromServer), $"{message}");
         }
 
         /// <inheritdoc />
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            Clients.All.SendAsync("Send", $"{GetUserName()} left the chat");
+            Send($"{GetUserName()} left the chat");
 
             return base.OnDisconnectedAsync(exception);
         }
@@ -51,15 +44,22 @@ namespace ShortLivedChatServer.Hubs
 
         public Task SendFromClient(string message)
         {
-            return Clients.All.SendAsync("Send", $"{GetUserName()}: {message}");
+            return Send($"{GetUserName()}: {message}");
         }
-
 
         /// <inheritdoc />
         public override Task OnConnectedAsync()
         {
-            Clients.All.SendAsync("Send", $"{GetUserName()} joined the chat");
+            //temporary solution. will be replaced later
+            if (!_timerHelper.FirstUserLoggedIn)
+            {
+                _timerHelper.FirstUserLoggedIn = true;
+                _timerHelper.CreateTimer();
+            }
+
+            Send($"{GetUserName()} joined the chat");
             return base.OnConnectedAsync();
+
         }
 
         //TODO:find a better way to get the user's name.
