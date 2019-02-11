@@ -19,9 +19,35 @@ namespace ShortLivedChatConsoleClient
 
         private static async Task MainAsync()
         {
+            var isRegistration = false;
+            var hasClientPromptedForJoin = false;
+            var hasNotJoinedYet = true;
             //Get token
-            //TODO : prompt the user to enter username and password in console 
-            var token = TokenHelper.GetAccessToken(BaseUrl,"birbilis","pass");
+            Console.WriteLine("Do you want to Log in or Register? Press R or L?");
+           
+            var input =  Console.ReadLine();
+            if (input.Equals("R"))
+            {
+                isRegistration = true;
+            }
+            Console.WriteLine("Please enter the username");
+            var userName = Console.ReadLine();
+            Console.WriteLine("Please enter the password");
+            var password = Console.ReadLine();
+
+            if (isRegistration)
+            {
+                var rrm = new RegistrationRequestModel {UserName = userName, Password = password};
+                var result = await RegistrationHelper.RegisterUser(BaseUrl, rrm);
+                if (!result)
+                {
+                    Console.WriteLine("The registration failed.  Please try again");
+                    Console.ReadKey();
+                    Environment.Exit(0);
+                }
+            }
+
+            var token = TokenHelper.GetAccessToken(BaseUrl,userName,password);
             if (token.Result == null)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -29,15 +55,29 @@ namespace ShortLivedChatConsoleClient
                 Console.ReadKey();
                 return;
             }
-
-            //conect to chat hub
+            Console.WriteLine("Login was successful");
+            //connect to chat hub
             _chatConnection = await ChatClient.ConnectToChat(token, BaseUrl);
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine("Connected to the chat server");
 
-            
+
+            _chatConnection.On<string>("Welcome",  message =>
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine($"{message}");
+                Console.WriteLine();
+                Console.WriteLine("Please enter the number of room you want to join");
+                hasClientPromptedForJoin = true;
+            });
+
+         
+
             _chatConnection.On("Close", async () =>
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine("The chat channel closed.");
+                Console.WriteLine("The chat channel is closed.Press any key to exit the app.");
+                Console.ReadKey();
                 await _chatConnection.StopAsync();
                 Environment.Exit(-1);
             });
@@ -56,9 +96,22 @@ namespace ShortLivedChatConsoleClient
                 Console.WriteLine($"{message}");
             });
 
+           
 
+            while (true)
+            {
+                Console.ResetColor();
+                if (hasClientPromptedForJoin)
+                {
+                    await _chatConnection.SendAsync("JoinToGroup",Console.ReadLine());
+                    hasClientPromptedForJoin = hasNotJoinedYet = false;
+                    
+                }
+                else if(!hasClientPromptedForJoin && !hasNotJoinedYet)
+                     await _chatConnection.SendAsync("SendFromClient", Console.ReadLine());
+            }
 
-            while (true) await _chatConnection.SendAsync("SendFromClient", Console.ReadLine());
+           
         }
     }
 }

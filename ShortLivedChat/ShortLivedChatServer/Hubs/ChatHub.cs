@@ -17,29 +17,29 @@ namespace ShortLivedChatServer.Hubs
     [Authorize(AuthenticationSchemes = IdentityServerAuthenticationDefaults.AuthenticationScheme)]
     public class ChatHub : Hub
     {
-        private readonly TimerHelper _timerHelper;
+        private readonly GroupsManager _groupsManager;
 
-        public ChatHub(TimerHelper timerHelper)
+        public ChatHub(GroupsManager groupsManager)
         {
-            _timerHelper = timerHelper;
+            _groupsManager = groupsManager;
         }
 
-        public void SendFromServer(string message)
+        public async Task  SendFromServer(string message)
         {
-            Clients.All.SendAsync(nameof(SendFromServer), $"{message}");
+           await  Clients.Group(_groupsManager.GetNewRoom().roomName).SendAsync(nameof(SendFromServer), $"{message}");
         }
 
         /// <inheritdoc />
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
-            Send($"{GetUserName()} left the chat");
+            await Send($"{GetUserName()} left the chat");
 
-            return base.OnDisconnectedAsync(exception);
+            await base.OnDisconnectedAsync(exception);
         }
 
         public Task Send(string message)
         {
-            return Clients.All.SendAsync("Send", $"{message}");
+            return Clients.Group(_groupsManager.GetNewRoom().roomName).SendAsync("Send", $"{message}");
         }
 
         public Task SendFromClient(string message)
@@ -48,19 +48,25 @@ namespace ShortLivedChatServer.Hubs
         }
 
         /// <inheritdoc />
-        public override Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()
         {
-            //temporary solution. will be replaced later
-            if (!_timerHelper.FirstUserLoggedIn)
-            {
-                _timerHelper.FirstUserLoggedIn = true;
-                _timerHelper.CreateTimer();
-            }
-
-            Send($"{GetUserName()} joined the chat");
-            return base.OnConnectedAsync();
+            await Clients.Caller.SendAsync("Welcome",
+                $"Welcome to ShortLiveChat. Available rooms to join: 1. {_groupsManager.GetNewRoom().roomName}");
+           
+            await base.OnConnectedAsync();
 
         }
+
+        public async Task JoinToGroup(string groupName)
+        {
+            _groupsManager.AddUserToGroup(Context.ConnectionId, _groupsManager.GetNewRoom().roomName);
+            await Groups.AddToGroupAsync(Context.ConnectionId, _groupsManager.GetNewRoom().roomName);
+            
+            //Sends message to already connected clients
+            await SendFromServer($"{GetUserName()} joined the chat room {_groupsManager.GetNewRoom().roomName}");
+        }
+
+        
 
         //TODO:find a better way to get the user's name.
         private string GetUserName()
