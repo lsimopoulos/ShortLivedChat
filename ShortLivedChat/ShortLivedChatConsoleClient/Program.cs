@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -7,7 +6,7 @@ namespace ShortLivedChatConsoleClient
 {
     internal static class Program
     {
-        //hardcoded port and baseurl
+        //hardcoded port and base url
         private const string ServerPort = "5001";
         private static readonly string BaseUrl = $"https://localhost:{ServerPort}/";
 
@@ -26,7 +25,7 @@ namespace ShortLivedChatConsoleClient
             Console.WriteLine("Do you want to Log in or Register? Press R or L?");
            
             var input =  Console.ReadLine();
-            if (input.Equals("R"))
+            if (input.ToUpper().Equals("R"))
             {
                 isRegistration = true;
             }

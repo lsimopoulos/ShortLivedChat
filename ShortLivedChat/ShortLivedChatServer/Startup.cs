@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +10,7 @@ namespace ShortLivedChatServer
 {
     public class Startup
     {
-        private static Timer _timer;
+        //private static Timer _timer;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -19,10 +18,12 @@ namespace ShortLivedChatServer
         {
 
 
-            services.AddSignalR().AddMessagePackProtocol();
+            services
+                .AddSignalR(options => { options.EnableDetailedErrors = true; })
+                .AddMessagePackProtocol();
 
             services.AddMvcCore()
-                .AddJsonFormatters()
+                .AddNewtonsoftJson()
                 .AddAuthorization();
 
             //https://github.com/IdentityServer/IdentityServer4/issues/2846
@@ -49,34 +50,32 @@ namespace ShortLivedChatServer
                     options.ApiName = "shortlivedchat";
                 }).AddCookie("dummy")
                 ;
-            
+
             services.AddSingleton<GroupsManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
-
-
             app.UseIdentityServer();
-            app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat"); });
+            app.UseRouting();
+            app.UseAuthorization();
 
-
-            app.Map("/api", builder =>
+            app.UseEndpoints(endpoint =>
             {
-                builder.UseMvc(routes =>
-                {
-                    routes.MapRoute(
-                        "controller",
-                        "api/{controller}");
-                    routes.MapRoute(
-                        "controllerAndAction",
-                        "api/{controller}/{action}");
-                    routes.MapRoute(
-                        "controllerAndActionAndId",
-                        "api/{controller}/{action}/{id?}");
-                });
+                endpoint.MapHub<ChatHub>("/chat");
+
+                endpoint.MapControllerRoute(
+                    "controller",
+                    "api/{controller}");
+                endpoint.MapControllerRoute(
+                    "controllerAndAction",
+                    "api/{controller}/{action}");
+                endpoint.MapControllerRoute(
+                    "controllerAndActionAndId",
+                    "api/{controller}/{action}/{id?}");
             });
+
 
             //Task.Factory.StartNew(() =>
             //{

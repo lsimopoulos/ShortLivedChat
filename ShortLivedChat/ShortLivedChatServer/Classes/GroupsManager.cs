@@ -125,6 +125,7 @@ namespace ShortLivedChatServer.Classes
         /// </summary>
         public (string roomName,string index) GetNewRoom()
         {
+            //TODO refactor
             if (!string.IsNullOrEmpty(_currentGroup) && _rooms[_currentGroup]) return (_currentGroup,_activeRooms.Keys.IndexOf(_currentGroup).ToString());
             var (key, _) = _rooms.Where(x => x.Value == false).ToList().ElementAt(new Random().Next(_rooms.Count));
             _rooms[key] = true;

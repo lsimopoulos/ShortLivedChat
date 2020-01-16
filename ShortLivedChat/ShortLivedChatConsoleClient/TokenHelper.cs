@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
+using IdentityModel;
 using IdentityModel.Client;
 
 namespace ShortLivedChatConsoleClient
@@ -11,7 +13,7 @@ namespace ShortLivedChatConsoleClient
     {
         private const string TokenEndPoint = "connect/token";
         /// <summary>
-        /// Get acccess token.
+        /// Get access token.
         /// </summary>
         /// <param name="baseUrl">the base url</param>
         /// <param name="userName">the username</param>
@@ -19,8 +21,20 @@ namespace ShortLivedChatConsoleClient
         public static async Task<string> GetAccessToken(string baseUrl,string userName,string password)
         {
             //TODO replace all hardcoded strings
-            var tokenClient = new TokenClient(baseUrl + TokenEndPoint, "chat_console_client", "superdupersecret");
-            var tokenResponse = await tokenClient.RequestResourceOwnerPasswordAsync(userName, password, "shortlivedchat");
+            var tokenOptions = new TokenClientOptions
+            {
+                Address = baseUrl + TokenEndPoint,
+                ClientId = "chat_console_client",
+                ClientSecret = "superdupersecret"
+            };
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, xCertificate2, chain, errors) => true
+
+            };
+            // Get a token.
+            var tokenClient = new TokenClient(new HttpMessageInvoker(handler), tokenOptions);
+            var tokenResponse = await tokenClient.RequestPasswordTokenAsync(userName, password, "shortlivedchat");
 
             if (!tokenResponse.IsError) return tokenResponse.AccessToken;
             Console.WriteLine(tokenResponse.Error);
